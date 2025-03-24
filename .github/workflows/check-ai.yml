@@ -13,11 +13,6 @@ jobs:
         with:
           fetch-depth: 2
 
-      - name: Install jq
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y jq
-
       - name: Get Git Diff
         id: get_diff
         run: |
@@ -25,6 +20,12 @@ jobs:
           echo "DIFF<<EOF" >> $GITHUB_OUTPUT
           echo "$diff" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Post Diff
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          body: ${{ steps.get_diff.outputs.DIFF }}
 
       - name: Call Gemini API and Comment
         id: gemini_review
