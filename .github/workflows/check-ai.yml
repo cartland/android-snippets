@@ -44,7 +44,7 @@ jobs:
       - name: Use the Gemini Answer in another step (example)
         run: |
           ESCAPED_ANSWER=$(printf '%q' "${{ env.GEMINI_ANSWER }}")
-          echo "The gemini answer was: ${{ env.ESCAPED_ANSWER }}"
+          echo "The gemini answer was: $ESCAPED_ANSWER"
 
       - name: Post Gemini Comment
         uses: peter-evans/create-or-update-comment@v4
