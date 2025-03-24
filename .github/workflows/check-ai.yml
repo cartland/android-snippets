@@ -33,9 +33,10 @@ jobs:
       - name: Extract Gemini Answer
         run: |
           GEMINI_ANSWER=$(jq '.candidates[0].content.parts[0].text' gemini_result.json)
-          echo "GEMINI_ANSWER=$GEMINI_ANSWER" >> $GITHUB_ENV
+          ESCAPED_ANSWER=$(printf '%q' "$GEMINI_ANSWER")
+          echo "GEMINI_ANSWER=$ESCAPED_ANSWER" >> $GITHUB_ENV
           echo "Gemini Answer:"
-          echo "$GEMINI_ANSWER"
+          echo "$ESCAPED_ANSWER"
 
       - name: Upload Gemini Result as Artifact
         uses: actions/upload-artifact@v4
