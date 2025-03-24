@@ -30,12 +30,13 @@ jobs:
             echo "gemini_response=No diff to review." >> $GITHUB_OUTPUT
           else
             API_KEY="${{ secrets.GEMINI_API_KEY }}"
-            JSON_PAYLOAD='{\"contents\": [{\"parts\": [{\"text\": \"Explain how AI works\"}]}]}'
+            JSON_PAYLOAD='JSON_PAYLOAD='{"contents": [{"parts": [{"text": "Explain how AI works"}]}]}'
 
             GEMINI_RESPONSE=$(curl "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=$API_KEY" \
               -H 'Content-Type: application/json' \
               -X POST \
               -d "$JSON_PAYLOAD")
+            echo $GEMINI_RESPONSE
           fi
 
       - name: Post Gemini Comment
