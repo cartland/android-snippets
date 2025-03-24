@@ -22,13 +22,17 @@ jobs:
           echo "EOF" >> $GITHUB_OUTPUT
 
       - name: Make Gemini API Request and Save Result
+        id: gemini_api
         run: |
           API_KEY="${{ secrets.GEMINI_API_KEY }}"
-          JSON_PAYLOAD='{"contents": [{"parts": [{"text": "Explain how AI works"}]}]}'
+          DIFF="${{ steps.get_diff.outputs.DIFF }}"
+          JSON_PAYLOAD='{"contents": [{"parts": [{"text": "Summarize the diff in one line: \n'$DIFF'"}]}]}'
           curl "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=$API_KEY" \
             -H 'Content-Type: application/json' \
             -X POST \
             -d "$JSON_PAYLOAD" > gemini_result.json
+          GEMINI_ANSWER=$(jq '.candidates[0].content.parts[0].text' gemini_result.json)
+          echo "GEMINI_ANSWER=$GEMINI_ANSWER" >> $GITHUB_OUTPUT
 
       - name: Upload Gemini Result as Artifact
         uses: actions/upload-artifact@v4
@@ -36,13 +40,8 @@ jobs:
           name: gemini-result
           path: gemini_result.json
 
-      - name: Extract Gemini Answer
-        run: |
-          GEMINI_ANSWER=$(jq '.candidates[0].content.parts[0].text' gemini_result.json)
-          echo "GEMINI_ANSWER=$GEMINI_ANSWER" >> $GITHUB_ENV
-
       - name: Post Gemini Comment
         uses: peter-evans/create-or-update-comment@v4
         with:
           issue-number: ${{ github.event.pull_request.number }}
-          body: ${{ env.GEMINI_ANSWER }}
+          body: ${{ steps.gemini_api.outputs.GEMINI_ANSWER }}
