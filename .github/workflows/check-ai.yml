@@ -39,7 +39,7 @@ jobs:
         run: |
           DIFF_CONTENT=$(cat "$DIFF")
           escaped_content=$(echo "$DIFF_CONTENT" | sed 's/\\/\\\\/g; s/"/\\"/g')
-          JSON_PAYLOAD="{\"contents\": [{\"parts\": [{\"text\": \"You are responding to a GitHub Pull Request by reading the git diff. Start your response with <Thsi PR appear to> then complete a 1 line summary of the git diff. \n$escaped_content\"}]}]}"
+          JSON_PAYLOAD="{\"contents\": [{\"parts\": [{\"text\": \"You are responding to a GitHub Pull Request by reading the git diff. Start your response with: 'This PR appear to' Then complete a 1 line summary of the git diff. \n$escaped_content\"}]}]}"
           echo "$JSON_PAYLOAD" > gemini_request.json
 
       - name: Upload Gemini Request as Artifact
