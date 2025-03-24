@@ -71,7 +71,7 @@ jobs:
 
       - name: Write summary to result.md
         run: |
-          echo "## Diff summary genereated with the Gemini API" > result.md
+          echo "#### git diff summary by Gemini" > result.md
           echo "${{ steps.extract_text.outputs.TEXT }}" >> result.md
 
       - name: Upload Result File as Artifact
