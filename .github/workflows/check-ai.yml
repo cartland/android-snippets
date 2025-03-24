@@ -52,4 +52,10 @@ jobs:
         uses: peter-evans/create-or-update-comment@v4
         with:
           issue-number: ${{ github.event.pull_request.number }}
-          body: ${{ steps.gemini_review.outputs.gemini_response }}
+          body: ${{ env.GEMINI_ANSWER }}
+
+      - name: upload gemini results
+        uses: actions/upload-artifact@v4
+        with:
+          name: gemini-results
+          path: gemini_result.json
