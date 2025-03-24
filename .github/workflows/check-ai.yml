@@ -21,13 +21,7 @@ jobs:
           echo "$diff" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
 
-      - name: Post Diff
-        uses: peter-evans/create-or-update-comment@v4
-        with:
-          issue-number: ${{ github.event.pull_request.number }}
-          body: ${{ steps.get_diff.outputs.DIFF }}
-
-      - name: Call Gemini API and Comment
+      - name: Call Gemini API
         id: gemini_review
         run: |
           DIFF="${{ steps.get_diff.outputs.DIFF }}"
@@ -42,8 +36,6 @@ jobs:
               -H 'Content-Type: application/json' \
               -X POST \
               -d "$JSON_PAYLOAD")
-
-            echo "gemini_response=$(echo "$GEMINI_RESPONSE" | jq -r '.candidates[0].content.parts[0].text')" >> $GITHUB_OUTPUT
           fi
 
       - name: Post Gemini Comment
