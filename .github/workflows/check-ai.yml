@@ -41,10 +41,17 @@ jobs:
           DIFF_CONTENT=$(cat "$DIFF")
           escaped_content=$(echo "$DIFF_CONTENT" | sed 's/\\/\\\\/g; s/"/\\"/g')
           JSON_PAYLOAD="{\"contents\": [{\"parts\": [{\"text\": \"Summarize the diff in one line: \n$escaped_content\"}]}]}"
+          cat $JSON_PAYLOAD > gemini_request.json
           curl "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=$API_KEY" \
             -H 'Content-Type: application/json' \
             -X POST \
             -d "$JSON_PAYLOAD" > gemini_result.json
+
+      - name: Upload Gemini Request as Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: gemini-request
+          path: gemini_request.json
 
       - name: Upload Gemini Result as Artifact
         uses: actions/upload-artifact@v4
@@ -56,6 +63,7 @@ jobs:
       #   run: |
       #     GEMINI_ANSWER=$(jq '.candidates[0].content.parts[0].text' gemini_result.json)
       #     echo "GEMINI_ANSWER=$GEMINI_ANSWER" >> $GITHUB_ENV
+
       # - name: Post Gemini Comment
       #   uses: peter-evans/create-or-update-comment@v4
       #   with:
