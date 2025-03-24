@@ -1,0 +1,89 @@
+name: Review PR with Gemini
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+jobs:
+  review_with_gemini:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      # Check the PR diff using the current branch and the base branch of the PR
+      - uses: GrantBirki/git-diff-action@v2.8.0
+        id: git-diff-action
+        with:
+          json_diff_file_output: diff.json
+          raw_diff_file_output: diff.txt
+          file_output_only: "true"
+
+      # Print the diff in JSON format
+      - name: print json diff
+        env:
+          DIFF: ${{ steps.git-diff-action.outputs.json-diff-path }}
+        run: cat $DIFF
+
+      # Print the diff in raw git format
+      - name: print raw diff
+        env:
+          DIFF: ${{ steps.git-diff-action.outputs.raw-diff-path }}
+        run: cat $DIFF
+
+      - name: Prepare Gemini API Request
+        env:
+          DIFF: ${{ steps.git-diff-action.outputs.raw-diff-path }}
+        run: |
+          DIFF_CONTENT=$(cat "$DIFF")
+          escaped_content=$(echo "$DIFF_CONTENT" | sed 's/\\/\\\\/g; s/"/\\"/g')
+          JSON_PAYLOAD="{\"contents\": [{\"parts\": [{\"text\": \"You are responding to a GitHub Pull Request by reading the git diff. Start your response with: 'This PR appears to' Then complete a 1 line summary of the git diff. \n$escaped_content\"}]}]}"
+          echo "$JSON_PAYLOAD" > gemini_request.json
+
+      - name: Upload Gemini Request as Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: gemini-request
+          path: gemini_request.json
+
+      - name: Make Gemini API Request and Save Result
+        env:
+          API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          curl "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=$API_KEY" \
+            -H 'Content-Type: application/json' \
+            -X POST \
+            -d "@gemini_request.json" > gemini_result.json
+
+      - name: Upload Gemini Result as Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: gemini-result
+          path: gemini_result.json
+
+      - name: Extract text from JSON
+        id: extract_text
+        run: |
+          TEXT=$(jq -r '.candidates[0].content.parts[0].text' gemini_result.json)
+          echo "TEXT=$TEXT" >> $GITHUB_OUTPUT
+
+      - name: Write summary to result.md
+        run: |
+          echo "## git diff summary by Gemini" > result.md
+          echo "${{ steps.extract_text.outputs.TEXT }}" >> result.md
+
+      - name: Upload Result File as Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: result
+          path: result.md
+
+      - name: Post Comment with Gemini Response
+        uses: peter-evans/create-or-update-comment@v4	
+        with:	
+          issue-number: ${{ github.event.pull_request.number }}	
+          body-path: 'result.md'
+
+
