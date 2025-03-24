@@ -19,25 +19,22 @@ jobs:
           diff=$(git diff HEAD~1 HEAD)
           echo "DIFF<<EOF" >> $GITHUB_OUTPUT
           echo "$diff" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
-
-      - name: Call Gemini API and Comment
-        id: gemini_review
-        run: |
-          DIFF="${{ steps.get_diff.outputs.DIFF }}"
+          echo "EOF" >> <span class="math-inline">GITHUB\_OUTPUT
+\- name\: Call Gemini API and Comment
+id\: gemini\_review
+run\: \|
+DIFF\="</span>{{ steps.get_diff.outputs.DIFF }}"
           if [[ -z "$DIFF" ]]; then
             echo "No diff found. Skipping Gemini review."
-            echo "gemini_response=No diff to review." >> $GITHUB_OUTPUT
-          else
-            API_KEY="${{ secrets.GEMINI_API_KEY }}"
-            JSON_PAYLOAD=$(echo "$DIFF" | jq -Rs '{contents: [{parts: [{text: "You are a GitHub Actions bot that is an expert at reviewing GitHub Pull Requests. You are helpful and concise. Please review the git diff carefully, and respond in the following format. Hello, I am a bot powered by Gemini! Here\'s what I see in this PR. Summary<one line summary of all changes> <description of the changes, can be multiple sentences> Changed files: * <file name 1>: <one line summary of file 1 change> * <file name 2>: <one line summary of file 2 change> * <repeat for each file...>. Here is the git diff: \n\n" + . + "}]}]}')
-
-            GEMINI_RESPONSE=$(curl "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=$API_KEY" \
+            echo "gemini_response=No diff to review." >> <span class="math-inline">GITHUB\_OUTPUT
+else
+API\_KEY\="</span>{{ secrets.GEMINI_API_KEY }}"
+            JSON_PAYLOAD=$(echo "<span class="math-inline">DIFF" \| jq \-Rs '\{contents\: \[\{parts\: \[\{text\: "You are a GitHub Actions bot that is an expert at reviewing GitHub Pull Requests\. You are helpful and concise\. Please review the git diff carefully, and respond in the following format\. Hello, I am a bot powered by Gemini\! Here\\'s what I see in this PR\. Summary<one line summary of all changes\> <description of the changes, can be multiple sentences\> Changed files\: \* <file name 1\>\: <one line summary of file 1 change\> \* <file name 2\>\: <one line summary of file 2 change\> \* <repeat for each file\.\.\.\>\. Here is the git diff\: \\n\\n" \+ \. \+ "\}\]\}\]\}'\)
+GEMINI\_RESPONSE\=</span>(curl "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=$API_KEY" \
               -H 'Content-Type: application/json' \
               -X POST \
-              -d "$JSON_PAYLOAD")
-
-            echo "gemini_response=$(echo "$GEMINI_RESPONSE" | jq -r '.candidates[0].content.parts[0].text')" >> $GITHUB_OUTPUT
+              -d "<span class="math-inline">JSON\_PAYLOAD"\)
+echo "gemini\_response\=</span>(echo "$GEMINI_RESPONSE" | jq -r '.candidates[0].content.parts[0].text')" >> $GITHUB_OUTPUT
           fi
 
       - name: Post Gemini Comment
