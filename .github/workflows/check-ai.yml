@@ -30,29 +30,24 @@ jobs:
             -X POST \
             -d "$JSON_PAYLOAD" > gemini_result.json
 
-      - name: Extract Gemini Answer
-        run: |
-          GEMINI_ANSWER=$(jq '.candidates[0].content.parts[0].text' gemini_result.json)
-          echo "GEMINI_ANSWER=$GEMINI_ANSWER" >> $GITHUB_ENV
-
       - name: Upload Gemini Result as Artifact
         uses: actions/upload-artifact@v4
         with:
           name: gemini-result
           path: gemini_result.json
 
+      - name: Extract Gemini Answer
+        run: |
+          GEMINI_ANSWER=$(jq '.candidates[0].content.parts[0].text' gemini_result.json)
+          echo "GEMINI_ANSWER=$GEMINI_ANSWER" >> $GITHUB_ENV
+
       - name: Use the Gemini Answer in another step (example)
         run: |
-          echo "The gemini answer was: ${{ env.GEMINI_ANSWER }}"
+          ESCAPED_ANSWER=$(printf '%q' "${{ env.GEMINI_ANSWER }}")
+          echo "The gemini answer was: ${{ env.ESCAPED_ANSWER }}"
 
       - name: Post Gemini Comment
         uses: peter-evans/create-or-update-comment@v4
         with:
           issue-number: ${{ github.event.pull_request.number }}
           body: ${{ env.GEMINI_ANSWER }}
-
-      - name: upload gemini results
-        uses: actions/upload-artifact@v4
-        with:
-          name: gemini-results
-          path: gemini_result.json
