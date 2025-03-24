@@ -34,7 +34,7 @@ jobs:
         run: |
           GEMINI_ANSWER=$(jq '.candidates[0].content.parts[0].text' gemini_result.json)
           ESCAPED_ANSWER=$(printf '%q' "$GEMINI_ANSWER")
-          echo "GEMINI_ANSWER=$ESCAPED_ANSWER" >> $GITHUB_ENV
+          echo "GEMINI_ANSWER=$GEMINI_ANSWER" >> $GITHUB_ENV
           echo "Gemini Answer:"
           echo "$ESCAPED_ANSWER"
 
