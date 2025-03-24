@@ -63,10 +63,27 @@ jobs:
           name: gemini-result
           path: gemini_result.json
 
+      - name: Extract text from JSON
+        id: extract_text
+        run: |
+          TEXT=$(jq -r '.candidates[0].content.parts[0].text' gemini_result.json)
+          echo "TEXT=$TEXT" >> $GITHUB_OUTPUT
+
+      - name: Write to result.md
+        run: |
+          echo "## Result" > result.md
+          echo "${{ steps.extract_text.outputs.TEXT }}" >> result.md
+
+      - name: Upload Result File as Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: result
+          path: result.md
+
       - name: Post Comment with Gemini Response
         uses: peter-evans/create-or-update-comment@v4	
         with:	
           issue-number: ${{ github.event.pull_request.number }}	
-          body-path: 'gemini_result.json'
+          body-path: 'result.md'
 
 
