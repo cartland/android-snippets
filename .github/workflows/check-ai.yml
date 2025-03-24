@@ -39,7 +39,7 @@ jobs:
         run: |
           DIFF_CONTENT=$(cat "$DIFF")
           escaped_content=$(echo "$DIFF_CONTENT" | sed 's/\\/\\\\/g; s/"/\\"/g')
-          JSON_PAYLOAD="{\"contents\": [{\"parts\": [{\"text\": \"Summarize the diff in one line: \n$escaped_content\"}]}]}"
+          JSON_PAYLOAD="{\"contents\": [{\"parts\": [{\"text\": \"Summarize the git diff in one line: \n$escaped_content\"}]}]}"
           echo "$JSON_PAYLOAD" > gemini_request.json
 
       - name: Upload Gemini Request as Artifact
@@ -69,9 +69,9 @@ jobs:
           TEXT=$(jq -r '.candidates[0].content.parts[0].text' gemini_result.json)
           echo "TEXT=$TEXT" >> $GITHUB_OUTPUT
 
-      - name: Write to result.md
+      - name: Write summary to result.md
         run: |
-          echo "## Result" > result.md
+          echo "## Diff summary genereated with the Gemini API" > result.md
           echo "${{ steps.extract_text.outputs.TEXT }}" >> result.md
 
       - name: Upload Result File as Artifact
