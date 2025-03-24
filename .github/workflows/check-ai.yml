@@ -68,7 +68,4 @@ jobs:
         with:	
           issue-number: ${{ github.event.pull_request.number }}	
           body: |
-                **Gemini PR Summary:**
-                ```
-                ${{ fromJson(steps.gemini_result.outputs.result).candidates[0].content.parts[0].text }}
-                ```
+                echo $(jq '.candidates[0].content.parts[0].text' gemini_result.json)
