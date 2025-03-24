@@ -1,0 +1,36 @@
+name: Check for AI in PR
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+jobs:
+  check_ai:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Check for AI in diff
+        id: check_diff
+        run: |
+          diff=$(git diff HEAD~1 HEAD)
+
+          if [[ -z "$diff" ]]; then # Check if diff is empty
+            echo "found_ai=false" >> $GITHUB_OUTPUT
+            exit 0 #exit successfully, no need to check empty diff.
+          fi
+
+          if echo "$diff" | grep -iq "AI"; then # Case-insensitive search with grep
+            echo "found_ai=true" >> $GITHUB_OUTPUT
+          else
+            echo "found_ai=false" >> $GITHUB_OUTPUT
+          fi
+      - name: Comment on PR if AI is found
+        if: steps.check_diff.outputs.found_ai == 'true'
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          body: "I found 'AI'!"
