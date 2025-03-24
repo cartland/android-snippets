@@ -38,7 +38,7 @@ jobs:
                   \"parts\":[{\"text\": \"Explain how AI works!\"}]
                 }]
               }")
-            echo "gemini_response=$(echo \"$GEMINI_RESPONSE\")" >> $GITHUB_OUTPUT
+            echo "gemini_response=$(echo $GEMINI_RESPONSE)" >> $GITHUB_OUTPUT
           fi
       - name: Post Gemini Comment
         uses: peter-evans/create-or-update-comment@v4
