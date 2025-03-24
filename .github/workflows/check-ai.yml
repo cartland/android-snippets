@@ -1,11 +1,11 @@
-name: Check for AI in PR
+name: Review PR with Gemini
 
 on:
   pull_request:
     types: [opened, synchronize]
 
 jobs:
-  check_ai:
+  review_with_gemini:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -13,24 +13,35 @@ jobs:
         with:
           fetch-depth: 2
 
-      - name: Check for AI in diff
-        id: check_diff
+      - name: Get Git Diff
+        id: get_diff
         run: |
           diff=$(git diff HEAD~1 HEAD)
+          echo "DIFF<<EOF" >> $GITHUB_OUTPUT
+          echo "$diff" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
 
-          if [[ -z "$diff" ]]; then # Check if diff is empty
-            echo "found_ai=false" >> $GITHUB_OUTPUT
-            exit 0 #exit successfully, no need to check empty diff.
-          fi
-
-          if echo "$diff" | grep -iq "AI"; then # Case-insensitive search with grep
-            echo "found_ai=true" >> $GITHUB_OUTPUT
+      - name: Call Gemini API and Comment
+        id: gemini_review
+        run: |
+          DIFF="${{ steps.get_diff.outputs.DIFF }}"
+          if [[ -z "$DIFF" ]]; then
+            echo "No diff found. Skipping Gemini review."
+            echo "gemini_response=No diff to review." >> $GITHUB_OUTPUT #Set output so comment can be made.
           else
-            echo "found_ai=false" >> $GITHUB_OUTPUT
+            API_KEY="${{ secrets.GEMINI_API_KEY }}"
+            GEMINI_RESPONSE=$(curl "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=$API_KEY" \
+              -H 'Content-Type: application/json' \
+              -X POST \
+              -d "{
+                \"contents\": [{
+                  \"parts\":[{\"text\": \"You are a GitHub Actions bot that is an expert at reviewing GitHub Pull Requests. You are helpful and concise. Please review the git diff carefully, and respond in the following format. Hello, I am a bot powered by Gemini! Here's what I see in this PR. Summary<one line summary of all changes> <description of the changes, can be multiple sentences> Changed files: * <file name 1>: <one line summary of file 1 change> * <file name 2>: <one line summary of file 2 change> * <repeat for each file...>. Here is the git diff: \n\n$DIFF\"}]
+                }]
+              }")
+            echo "gemini_response=$(echo "$GEMINI_RESPONSE" | jq -r '.candidates[0].content.parts[0].text')" >> $GITHUB_OUTPUT
           fi
-      - name: Comment on PR if AI is found
-        if: steps.check_diff.outputs.found_ai == 'true'
+      - name: Post Gemini Comment
         uses: peter-evans/create-or-update-comment@v4
         with:
           issue-number: ${{ github.event.pull_request.number }}
-          body: "I found 'AI'!"
+          body: ${{ steps.gemini_review.outputs.gemini_response }}
