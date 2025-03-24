@@ -62,3 +62,13 @@ jobs:
         with:
           name: gemini-result
           path: gemini_result.json
+
+      - name: Post Comment with Gemini Response
+        uses: peter-evans/create-or-update-comment@v4	
+        with:	
+          issue-number: ${{ github.event.pull_request.number }}	
+          body: |
+                **Gemini PR Summary:**
+                ```
+                ${{ fromJson(steps.gemini_result.outputs.result).candidates[0].content.parts[0].text }}
+                ```
