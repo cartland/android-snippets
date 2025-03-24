@@ -41,6 +41,7 @@ jobs:
           DIFF_CONTENT=$(cat "$DIFF")
           escaped_content=$(echo "$DIFF_CONTENT" | sed 's/\\/\\\\/g; s/"/\\"/g')
           JSON_PAYLOAD="{\"contents\": [{\"parts\": [{\"text\": \"Summarize the diff in one line: \n$escaped_content\"}]}]}"
+          cat $JSON_PAYLOAD > gemini_request.json
           curl "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=$API_KEY" \
             -H 'Content-Type: application/json' \
             -X POST \
